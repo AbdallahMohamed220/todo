@@ -13,7 +13,6 @@ class TodoListCubit extends Cubit<TodoListState> {
     final newTodos = [...state.todos, newTodo];
 
     emit(state.copyWith(todos: newTodos));
-    print(state);
   }
 
   void editTodo(String id, String todoDesc) {

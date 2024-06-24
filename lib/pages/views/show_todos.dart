@@ -1,10 +1,7 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:todo/cubits/cubits.dart';
 
-import 'package:todo/cubits/filtered_todos/filtered_todos_cubit.dart';
 import 'package:todo/models/todo_model.dart';
 
 class ShowTodos extends StatelessWidget {
@@ -13,47 +10,78 @@ class ShowTodos extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final todos = context.watch<FilteredTodosCubit>().state.filteredTodos;
-    return ListView.separated(
-      primary: false,
-      shrinkWrap: true,
-      itemBuilder: (BuildContext context, int index) {
-        return Dismissible(
-          key: ValueKey(todos[index].id),
-          background: const DismissBackground(direction: 0),
-          secondaryBackground: const DismissBackground(direction: 1),
-          onDismissed: (_) {
-            context.read<TodoListCubit>().removeTodo(todos[index].id);
-          },
-          confirmDismiss: (_) {
-            return showDialog(
-              context: context,
-              builder: (context) {
-                return AlertDialog(
-                  title: const Text('Are you sure'),
-                  content: const Text('you want to delete this todo ?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Yes'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('No'),
-                    )
-                  ],
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<TodoListCubit, TodoListState>(
+          listener: (context, state) {
+            context.read<FilteredTodosCubit>().setFilteredTodos(
+                  context.read<TodoFilterCubit>().state.filter,
+                  state.todos,
+                  context.read<TodoSearchCubit>().state.searchTerm,
                 );
-              },
-            );
           },
-          child: TodoItem(
-            todo: todos[index],
-          ),
-        );
-      },
-      separatorBuilder: (context, _) => const Divider(
-        color: Colors.grey,
+        ),
+        BlocListener<TodoFilterCubit, TodoFilterState>(
+          listener: (context, state) {
+            context.read<FilteredTodosCubit>().setFilteredTodos(
+                  state.filter,
+                  context.read<TodoListCubit>().state.todos,
+                  context.read<TodoSearchCubit>().state.searchTerm,
+                );
+          },
+        ),
+        BlocListener<TodoSearchCubit, TodoSearchState>(
+          listener: (context, state) {
+            context.read<FilteredTodosCubit>().setFilteredTodos(
+                  context.read<TodoFilterCubit>().state.filter,
+                  context.read<TodoListCubit>().state.todos,
+                  state.searchTerm,
+                );
+          },
+        ),
+      ],
+      child: ListView.separated(
+        primary: false,
+        shrinkWrap: true,
+        itemBuilder: (BuildContext context, int index) {
+          return Dismissible(
+            key: ValueKey(todos[index].id),
+            background: const DismissBackground(direction: 0),
+            secondaryBackground: const DismissBackground(direction: 1),
+            onDismissed: (_) {
+              context.read<TodoListCubit>().removeTodo(todos[index].id);
+            },
+            confirmDismiss: (_) {
+              return showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text('Are you sure'),
+                    content: const Text('you want to delete this todo ?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Yes'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('No'),
+                      )
+                    ],
+                  );
+                },
+              );
+            },
+            child: TodoItem(
+              todo: todos[index],
+            ),
+          );
+        },
+        separatorBuilder: (context, _) => const Divider(
+          color: Colors.grey,
+        ),
+        itemCount: todos.length,
       ),
-      itemCount: todos.length,
     );
   }
 }
