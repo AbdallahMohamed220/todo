@@ -1,10 +1,6 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:todo/cubits/cubits.dart';
-
-import 'package:todo/cubits/filtered_todos/filtered_todos_cubit.dart';
+import 'package:todo/blocs/blocs.dart';
 import 'package:todo/models/todo_model.dart';
 
 class ShowTodos extends StatelessWidget {
@@ -12,7 +8,7 @@ class ShowTodos extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final todos = context.watch<FilteredTodosCubit>().state.filteredTodos;
+    final todos = context.watch<FilteredTodosBloc>().state.filteredTodos;
     return ListView.separated(
       primary: false,
       shrinkWrap: true,
@@ -22,7 +18,9 @@ class ShowTodos extends StatelessWidget {
           background: const DismissBackground(direction: 0),
           secondaryBackground: const DismissBackground(direction: 1),
           onDismissed: (_) {
-            context.read<TodoListCubit>().removeTodo(todos[index].id);
+            context
+                .read<TodoListBloc>()
+                .add(RemoveTodoEvent(todo: todos[index]));
           },
           confirmDismiss: (_) {
             return showDialog(
@@ -122,9 +120,11 @@ class _TodoItemState extends State<TodoItem> {
                                 ? true
                                 : false;
                             if (!error) {
-                              context.read<TodoListCubit>().editTodo(
-                                    widget.todo.id,
-                                    textController.text,
+                              context.read<TodoListBloc>().add(
+                                    EditTodoEvent(
+                                      id: widget.todo.id,
+                                      todoDesc: textController.text,
+                                    ),
                                   );
                               Navigator.pop(context);
                             }
@@ -145,7 +145,7 @@ class _TodoItemState extends State<TodoItem> {
       leading: Checkbox(
         value: widget.todo.completed,
         onChanged: (bool? checked) {
-          context.read<TodoListCubit>().toggleTodo(widget.todo.id);
+          context.read<TodoListBloc>().add(ToggleTodoEvent(id: widget.todo.id));
         },
       ),
       title: Text(

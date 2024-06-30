@@ -2,26 +2,30 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:todo/models/todo_model.dart';
 
+part 'todo_list_event.dart';
 part 'todo_list_state.dart';
 
-class TodoListCubit extends Cubit<TodoListState> {
-  TodoListCubit() : super(TodoListState.initial());
+class TodoListBloc extends Bloc<TodoListEvent, TodoListState> {
+  TodoListBloc() : super(TodoListState.initial()) {
+    on<AddTodoEvent>(_addTodo);
+    on<EditTodoEvent>(_editTodo);
+    on<ToggleTodoEvent>(_toggleTodo);
+    on<RemoveTodoEvent>(_removeTodo);
+  }
 
-  void addTodo(String todoDesc) {
-    final newTodo = Todo(desc: todoDesc);
-    // ... is called spread operator that use to get all list items
+  void _addTodo(AddTodoEvent event, Emitter<TodoListState> emit) {
+    final newTodo = Todo(desc: event.todoDesc);
     final newTodos = [...state.todos, newTodo];
-
     emit(state.copyWith(todos: newTodos));
   }
 
-  void editTodo(String id, String todoDesc) {
+  void _editTodo(EditTodoEvent event, Emitter<TodoListState> emit) {
     final newTodos = state.todos.map(
       (Todo todo) {
-        if (todo.id == id) {
+        if (todo.id == event.id) {
           return Todo(
             id: todo.id,
-            desc: todoDesc,
+            desc: event.todoDesc,
             completed: todo.completed,
           );
         }
@@ -32,12 +36,12 @@ class TodoListCubit extends Cubit<TodoListState> {
     emit(state.copyWith(todos: newTodos));
   }
 
-  void toggleTodo(String id) {
+  void _toggleTodo(ToggleTodoEvent event, Emitter<TodoListState> emit) {
     final newTodos = state.todos.map(
       (Todo todo) {
-        if (todo.id == id) {
+        if (todo.id == event.id) {
           return Todo(
-            id: id,
+            id: event.id,
             desc: todo.desc,
             completed: !todo.completed,
           );
@@ -49,8 +53,9 @@ class TodoListCubit extends Cubit<TodoListState> {
     emit(state.copyWith(todos: newTodos));
   }
 
-  void removeTodo(String id) {
-    final newTodos = state.todos.where((e) => e.id != id).toList();
+  void _removeTodo(RemoveTodoEvent event, Emitter<TodoListState> emit) {
+    final newTodos =
+        state.todos.where((Todo t) => t.id != event.todo.id).toList();
     emit(state.copyWith(todos: newTodos));
   }
 }
