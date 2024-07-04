@@ -11,3 +11,10 @@ a simple todo app that can :
 - search for todo with debounce Feature . 
 
 
+- The app has done in 4 types each type will be in septate branch the 4 is : 
+  - Cubit + StreamSubscription
+  - Cubit + BlocListener
+  - Bloc + StreamSubscription
+  - Bloc + BlocListener
+
+
